@@ -1,8 +1,13 @@
 using DarazApp.DbContext;
 using DarazApp.Mapping;
 using DarazApp.Models;
+using DarazApp.Repositories.CategoryRepository;
+using DarazApp.Repositories.ProductRepository;
 using DarazApp.Repositories.UserRepositories;
+using DarazApp.Repositories.UserRepository;
+using DarazApp.Services.CategoryService;
 using DarazApp.Services.EmailService;
+using DarazApp.Services.ProductService;
 using DarazApp.Services.TokenService;
 using DarazApp.Services.UserService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -24,6 +29,11 @@ builder.Services.AddScoped<IUserService, UserService>(); // Register the service
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
+
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile)); // Registers your profile
 

@@ -12,5 +12,16 @@
         public const string ErrorOccurred = "An error occurred while processing the request.";
 
     }
+    public static class AuthResponseMessages
+    {
+        public const string InvalidCredientials = "Invalid email or password.";
+        public const string UserLoginSuccess = "User Login successful.";
+        public const string EmailConfirmationFailed = "Email confirmation faild";
+        public const string PasswordSetSuccess = "Password Set Successfully.";
+        public const string PasswordReset = "Password reset token generated and Sent to Email successfully.";
+
+        
+
+    }
 
 }

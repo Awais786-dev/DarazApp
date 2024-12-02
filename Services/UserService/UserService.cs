@@ -15,10 +15,10 @@ namespace DarazApp.Services.UserService
         public async Task<User> RegisterUser(User user)
         {
             // Check if the user with the same email already exists
-            var existingUser = await _userRepository.GetUserByEmail(user.Email);
+            User existingUser = await _userRepository.GetUserByEmail(user.Email);
             if (existingUser != null)
             {
-                throw new Exception("User with this mail already exsit.");
+                throw new Exception("User with this mail already exist.");
             }
 
             User newUser = new()
@@ -37,13 +37,5 @@ namespace DarazApp.Services.UserService
         {
             return await _userRepository.GenerateConfirmationLink(email);
         }
-
-       //public async Task<string> GenerateLinkForPasswordReset(String token, string email)
-       // {
-
-       //     return await _userRepository.GenerateConfirmationLink(email, token);
-       // }
-
-
     }
 }

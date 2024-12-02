@@ -14,8 +14,8 @@ namespace DarazApp.Services.EmailService
         {
             try
             {
-                var fromAddress = new MailAddress(_smtpUsername, "Daraz.Pk");
-                var toAddress = new MailAddress(email);
+                MailAddress fromAddress = new MailAddress(_smtpUsername, "Daraz.Pk");
+                MailAddress toAddress = new MailAddress(email);
                 string subject = "Email Confirmation";
                 string body = $@"
                     <html>
@@ -32,7 +32,7 @@ namespace DarazApp.Services.EmailService
                     smtpClient.Credentials = new NetworkCredential(_smtpUsername, _smtpPassword);
                     smtpClient.EnableSsl = true;
 
-                    var mailMessage = new MailMessage(fromAddress, toAddress)
+                    MailMessage mailMessage = new MailMessage(fromAddress, toAddress)
                     {
                         Subject = subject,
                         Body = body,

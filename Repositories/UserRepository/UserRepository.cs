@@ -1,8 +1,9 @@
 ﻿using DarazApp.DbContext;
 using DarazApp.Models;
+using DarazApp.Repositories.UserRepositories;
 using Microsoft.AspNetCore.Identity;
 
-namespace DarazApp.Repositories.UserRepositories
+namespace DarazApp.Repositories.UserRepository
 {
     public class UserRepository : IUserRepository
     {

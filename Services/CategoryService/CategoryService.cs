@@ -1,4 +1,5 @@
-﻿using DarazApp.Models;
+﻿using DarazApp.DTOs;
+using DarazApp.Models;
 using DarazApp.Repositories.CategoryRepository;
 using DarazApp.Repositories.ProductRepository;
 
@@ -30,16 +31,8 @@ namespace DarazApp.Services.CategoryService
         //here i have to use service of product not repos of product.
         public async Task<List<Product>> GetProductsForCategoryAsync(int categoryId)
         {
-            return await _productRepository.GetProductsByCategoryIdAsync(categoryId);
+            return await _productRepository.GetProductsByCategoryIdAsync(categoryId); // need to change
         }
-
-        //public async Task AddProductAsync(Product product)
-        //{
-        //    await _productRepository.AddProductAsync(product);
-        //}
-
-
-
 
 
 
@@ -60,6 +53,11 @@ namespace DarazApp.Services.CategoryService
         }
 
 
+        public async Task<PagedResultDto<Category>> GetUsersWithPaginationAsync(PaginationQueryDto paginationQuery)
+        {
+            return await _categoryRepository.GetUsersWithPaginationAsync(paginationQuery);
+
+        }
 
 
 

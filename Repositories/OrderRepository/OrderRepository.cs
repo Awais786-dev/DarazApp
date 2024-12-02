@@ -3,51 +3,53 @@ using DarazApp.DTOs;
 using DarazApp.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace DarazApp.Repositories.CategoryRepository
+namespace DarazApp.Repositories.OrderRepository
 {
-    public class CategoryRepository : ICategoryRepository
+    public class OrderRepository : IOrderRepository
     {
         private readonly UserDbContext _context;
 
-        public CategoryRepository(UserDbContext context)
+        public OrderRepository(UserDbContext context)
         {
             _context = context;
         }
 
-        public async Task<List<Category>> GetTopLevelCategoriesAsync()
+        public async Task<Order> AddAsync(Order order)
         {
-            return await _context.Categories
-                                 .Where(c => c.ParentCategoryId == null)
-                                 .ToListAsync();
+
+            await _context.Orders.AddAsync(order);
+            await _context.SaveChangesAsync();  // Save changes to the database
+            return order;  // Return the created order
         }
 
-        public async Task<List<Category>> GetSubcategoriesAsync(int categoryId)
+        // Get order by ID
+        public async Task<Order> GetByIdAsync(int orderId)
         {
-            return await _context.Categories
-                                 .Where(c => c.ParentCategoryId == categoryId)
-                                 .ToListAsync();
+            
+            return await _context.Orders
+                .Include(o => o.Product)  // Include the product related to the order
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);  // Find by OrderId
         }
 
-
-
-        public async Task<Category> AddCategoryAsync(Category category)
+        public async Task<List<Order>> GetByUserIdAsync(string userId)
         {
-            _context.Categories.Add(category);
-            await _context.SaveChangesAsync();
-            return category;
+            // Retrieve all orders for a specific user
+            return await _context.Orders
+                .Where(o => o.UserId == userId)  // Filter by UserId
+                .Include(o => o.Product)  // Include related product details
+                .ToListAsync();  // Return list of orders
         }
 
-        public async Task<Category> GetCategoryByNameAsync(string name)
+     
+        public async Task<Order> UpdateAsync(Order order)
         {
-            return await _context.Categories.FirstOrDefaultAsync(c => c.Name == name);
+            // Update the order in the database
+            _context.Orders.Update(order);
+            await _context.SaveChangesAsync(); 
+            return order;  
         }
 
-        public async Task<Category> GetCategoryByIdAsync(int id)
-        {
-            return await _context.Categories.FindAsync(id);
-        }
-
-        public async Task<PagedResultDto<Category>> GetUsersWithPaginationAsync(PaginationQueryDto paginationQuery)
+        public async Task<PagedResultDto<Order>> GetUsersWithPaginationAsync(PaginationQueryDto paginationQuery)
         {
             // Extract data from the PaginationQueryDto
             string searchKeyword = paginationQuery.SearchKeyword;
@@ -57,12 +59,12 @@ namespace DarazApp.Repositories.CategoryRepository
             bool ascending = paginationQuery.Ascending;
 
             // Build the query based on search criteria and pagination settings
-            IQueryable<Category> query = _context.Categories.AsQueryable();
+            IQueryable<Order> query = _context.Orders.AsQueryable();
 
             // Search by keyword in any text field (e.g., Username, Email)
             if (!string.IsNullOrEmpty(searchKeyword))
             {
-                query = query.Where(u => u.Name.Contains(searchKeyword));
+                query = query.Where(u => u.OrderStatus.Contains(searchKeyword));
             }
 
             // Sorting
@@ -83,9 +85,9 @@ namespace DarazApp.Repositories.CategoryRepository
             int totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
             int skip = (pageNumber - 1) * pageSize;
 
-            List<Category> items = await query.Skip(skip).Take(pageSize).ToListAsync();
+            List<Order> items = await query.Skip(skip).Take(pageSize).ToListAsync();
 
-            return new PagedResultDto<Category>
+            return new PagedResultDto<Order>
             {
                 Items = items,
                 TotalRecords = totalRecords,
@@ -94,7 +96,6 @@ namespace DarazApp.Repositories.CategoryRepository
                 PageSize = pageSize
             };
         }
-
 
 
     }

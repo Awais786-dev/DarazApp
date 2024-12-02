@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using DarazApp.DTOs;
+using DarazApp.Helpers;
 using DarazApp.Models;
 using DarazApp.Services.CategoryService;
 using DarazApp.Services.ProductService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DarazApp.Controllers
@@ -12,87 +14,121 @@ namespace DarazApp.Controllers
     public class ProductsController : BaseController
     {
         private readonly IProductService _productService;
-
-      //  private readonly ICategoryService _categoryService;
         private readonly IMapper _mapper;
 
-
-        public ProductsController(IMapper mapper, IProductService productService)  //ICategoryService categoryService,
+        public ProductsController(IMapper mapper, IProductService productService)
         {
-         //   _categoryService = categoryService;
             _mapper = mapper;
             _productService = productService;
         }
 
-        // POST /api/products
-        //[HttpPost]
-        //public async Task<IActionResult> AddProduct([FromBody] Product product)
-        //{
-        //    if (product == null)
-        //        return BadRequest("Invalid product data.");
-
-        //    await _categoryService.AddProductAsync(product);
-        //    return CreatedAtAction(nameof(GetProductsForCategory), new { id = product.CategoryId }, product);
-        //}
-
-
-        //// Ensure this method exists to match the CreatedAtAction reference
-        //[HttpGet("{id}")]
-        //public async Task<IActionResult> GetProductsForCategory(int id)
-        //{
-        //    var products = await _categoryService.GetProductsForCategoryAsync(id);
-        //    if (products == null)
-        //        return NotFound();
-
-        //    return Ok(products);
-        //}
-
-        // POST /api/products
         [HttpPost]
         public async Task<IActionResult> AddProduct([FromBody] ProductDto productDto)
         {
-
-            if (productDto == null || string.IsNullOrEmpty(productDto.Name) || productDto.Price <= 0)
+            try
             {
-                return BadRequest<string>("Invalid product data.");
+                // Validate input data
+                if (productDto == null || string.IsNullOrEmpty(productDto.Name) || productDto.Price <= 0 || productDto.StockQuantity <= 0)
+                {
+                    return BadRequest<string>(ProductResponseMessages.ErrorOccurred);  // Use constant for error message
+                }
+
+                // Map ProductDto to Product model
+                Product product = _mapper.Map<Product>(productDto);
+
+                // Add the product via the service
+                Product addedProduct = await _productService.AddProductAsync(product);
+
+                ProductDto addedProductDto = _mapper.Map<ProductDto>(addedProduct);
+
+                // Return success response
+                return Ok(addedProductDto, ProductResponseMessages.ProductCreatedSuccess);  // Use constant for success message
             }
-
-            // Optionally, you can validate whether a product with the same name already exists, if required
-            // var existingProduct = await _categoryService.GetProductByNameAsync(productDto.Name);
-            // if (existingProduct != null) return BadRequest("Product already exists.");
-
-            // Map the ProductDto to Product model
-            var product = _mapper.Map<Product>(productDto);
-
-            // Add the product to the database using the service
-            var addedProduct = await _productService.AddProductAsync(product);
-
-            // Map the added product back to ProductDto for the response
-            var addedProductDto = _mapper.Map<ProductDto>(addedProduct);
-
-            // Return a success response with the created product DTO
-            return Ok<ProductDto>(addedProductDto, "Product created successfully.");
+            catch (Exception ex)
+            {
+                return BadRequest<string>(ProductResponseMessages.ErrorOccurred, new List<string> { ex.Message });  // Use constant for error message
+            }
         }
 
-        // Ensure this method exists to match the CreatedAtAction reference
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProductsForCategory(int id)
         {
-            var products = await _productService.GetProductsForCategoryAsync(id);
+            try
+            {
+                // Fetch products for the category
+                List<Product> products = await _productService.GetProductsById(id);
 
-            if (products == null || products.Count == 0)
-                return NotFound("No products found for the specified category.");
+                // Check if products were found
+                if (products == null || products.Count == 0)
+                {
+                    return NotFound<string>(ProductResponseMessages.NoProductsFound);  // Use constant for "No products found" message
+                }
 
-            // Map the list of products to ProductDto
-            var productDtos = _mapper.Map<List<ProductDto>>(products);
+                // Map the list of products to ProductDto
+                List<ProductDto> productDtos = _mapper.Map<List<ProductDto>>(products);
 
-            // Return a success response with the list of products
-            return Ok(productDtos, "Fetched products successfully.");
+                // Return success response with the product list
+                return Ok(productDtos, ProductResponseMessages.ProductsRetrievedSuccess);  // Use constant for success message
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest<string>(ProductResponseMessages.ErrorOccurred, new List<string> { ex.Message });  // Use constant for error message
+            }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> SearchProductsByName(string productName)
+        {
+            try
+            {
+                List<Product> products = await _productService.SearchProductsByNameAsync(productName);
+                if (products == null || !products.Any())
+                {
+                    return NotFound<string>(ProductResponseMessages.ProductNotFound);  // Use constant for "Product not found" message
+                }
 
+                List<ProductDto> productDtos = _mapper.Map<List<ProductDto>>(products);
 
+                return Ok<List<ProductDto>>(productDtos, ProductResponseMessages.ProductsRetrievedSuccess);  // Use constant for success message
+            }
+            catch (Exception ex)
+            {
+                return BadRequest<string>(ProductResponseMessages.ErrorOccurred, new List<string> { ex.Message });  // Use constant for error message
+            }
+        }
 
+        [HttpGet("GetOnPagination")]
+        public async Task<ActionResult> GetUsers([FromQuery] PaginationQueryDto paginationQuery)
+        {
+            try
+            {
+                PagedResultDto<Product> pagedResult = await _productService.GetUsersWithPaginationAsync(paginationQuery);
+
+                if (pagedResult == null || !pagedResult.Items.Any())
+                {
+                    return NotFound<ProductDto>(ProductResponseMessages.NoProductsFound);  // Use constant for "No products found" message
+                }
+
+                // Map the paged result items to ProductDto
+                List<ProductDto> productDtos = _mapper.Map<List<ProductDto>>(pagedResult.Items);
+
+                // Return the paginated result with the pagination metadata
+                PagedResultDto<ProductDto> response = new PagedResultDto<ProductDto>
+                {
+                    Items = productDtos,
+                    TotalRecords = pagedResult.TotalRecords,
+                    TotalPages = pagedResult.TotalPages,
+                    PageNumber = pagedResult.PageNumber,
+                    PageSize = pagedResult.PageSize
+                };
+
+                return Ok(response, ProductResponseMessages.ProductsRetrievedSuccess);  // Use constant for success message
+            }
+            catch (Exception ex)
+            {
+                return BadRequest<ProductDto>(ProductResponseMessages.ErrorOccurred, new List<string> { ex.Message });
+            }
+        }
     }
-
 }

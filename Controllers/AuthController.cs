@@ -40,28 +40,36 @@ namespace DarazApp.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
-            // Authenticate the user using email and password
-            User user = await _userManager.FindByEmailAsync(loginDto.Email);
-
-            // If authentication fails, return Unauthorized
-            if (user == null)
+            try
             {
-                return BadRequest<string>(AuthResponseMessages.InvalidCredientials);
+                // Authenticate the user using email and password
+                User user = await _userManager.FindByEmailAsync(loginDto.Email);
+
+                // If authentication fails, return Unauthorized
+                if (user == null)
+                {
+                    return BadRequest<string>(AuthResponseMessages.InvalidCredientials);
+                }
+
+                bool passwordValid = await _userManager.CheckPasswordAsync(user, loginDto.Password);
+
+                if (!passwordValid)
+                {
+                    return BadRequest<string>(AuthResponseMessages.InvalidCredientials);
+                }
+
+
+                // Generate JWT token for the authenticated user
+                string token = _tokenService.GenerateToken(user);
+                var response = new { Token = token };
+
+                return Ok(response, AuthResponseMessages.UserLoginSuccess);
             }
-
-            bool passwordValid = await _userManager.CheckPasswordAsync(user, loginDto.Password);
-
-            if (!passwordValid)
+            catch(Exception ex)
             {
-                return BadRequest<string>(AuthResponseMessages.InvalidCredientials);
+                return BadRequest<string>(AuthResponseMessages.InvalidCredientials, new List<string> { ex.Message });  
+
             }
-
-
-            // Generate JWT token for the authenticated user
-            string token = _tokenService.GenerateToken(user);
-            var response = new { Token = token };
-
-            return Ok(response, AuthResponseMessages.UserLoginSuccess);
         }
 
 
@@ -71,17 +79,14 @@ namespace DarazApp.Controllers
             try
             {
 
-                var user = await _userManager.FindByEmailAsync(forgotPasswordDto.Email);
+                User user = await _userManager.FindByEmailAsync(forgotPasswordDto.Email);
 
                 if (user == null)
                 {
                     return BadRequest<ApiResponse<string>>("User not found.");
                 }
-
-                //   var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                //   var confirmationLink = await _userService.GenerateLinkForPasswordReset(token, user.Email);
  
-                var confirmationLink = await _userService.GenerateConfirmationLink(user.Email);
+                string confirmationLink = await _userService.GenerateConfirmationLink(user.Email);
                 await _emailService.SendConfirmationEmail(user.Email, confirmationLink);
 
                 return Ok<string>(AuthResponseMessages.PasswordReset);
@@ -89,7 +94,6 @@ namespace DarazApp.Controllers
             }
             catch (Exception ex)
             {
-                // Handle any errors
                 return BadRequest<ApiResponse<string>>($"An error occurred: {ex.Message}");
             }
         }
@@ -101,39 +105,35 @@ namespace DarazApp.Controllers
         [HttpPost("signup")]
         public async Task<ActionResult> SignUp([FromBody] UserDto userDto)
         {
-            
-           // userDto.Id = null; // Ensure no ID is passed in
-
             ActionResult validationResponse = ValidateModel(userDto);
             if (validationResponse != null) return validationResponse;
 
             try
             {
                 // Map UserDto to User entity
-                var user = _mapper.Map<User>(userDto);
+                User user = _mapper.Map<User>(userDto);
 
                 // Call the service to register the user
-                var createdUser = await _userService.RegisterUser(user);
+                User createdUser = await _userService.RegisterUser(user);
 
                 if (createdUser == null)
                 {
                     return BadRequest<UserDto>(UserResponseMessages.ErrorOccurred);
                 }
 
-               var confirmationLink = await _userService.GenerateConfirmationLink(user.Email);
+               string confirmationLink = await _userService.GenerateConfirmationLink(user.Email);
 
                 // implementation of email sending logic
                 await _emailService.SendConfirmationEmail(user.Email, confirmationLink);
 
 
-                var savedUserDto = _mapper.Map<UserDto>(createdUser);  // Map the saved User entity back to UserDto
+                UserDto savedUserDto = _mapper.Map<UserDto>(createdUser);  // Map the saved User entity back to UserDto
 
                 // Return success response with the created user data
                 return Ok(savedUserDto, UserResponseMessages.UserCreatedSuccess);
             }
             catch (Exception ex)
             {
-               
                 return BadRequest<UserDto>(UserResponseMessages.ErrorOccurred, new List<string> { ex.Message });
             }
         }
@@ -156,14 +156,14 @@ namespace DarazApp.Controllers
                 }
 
                 // Confirm the email using the token
-                var result = await _userManager.ConfirmEmailAsync(user, confirmEmailDto.Token);
+                IdentityResult result = await _userManager.ConfirmEmailAsync(user, confirmEmailDto.Token);
                 if (!result.Succeeded)
                 {
-                    return BadRequest<string>("Email confirmation failed.");
+                    return BadRequest<string>(AuthResponseMessages.EmailConfirmationFailed);
                 }
 
                 // Set the user's new password
-                var passwordResult = await _userManager.RemovePasswordAsync(user);
+                IdentityResult passwordResult = await _userManager.RemovePasswordAsync(user);
                 if (!passwordResult.Succeeded)
                 {
                     return BadRequest<string>("Failed to remove existing password.");

@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 namespace DarazApp.DbContext
 {
 
-    public class UserDbContext : IdentityDbContext<User>
+    public class DbContext : IdentityDbContext<User>
     {
-        public UserDbContext(DbContextOptions<UserDbContext> options) : base(options)
+        public DbContext(DbContextOptions<DbContext> options) : base(options)
         {
         }
 

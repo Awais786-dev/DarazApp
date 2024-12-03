@@ -15,7 +15,7 @@ namespace DarazApp.Services.CategoryService
 
         Task<Category> GetCategoryByNameAsync(string name);
 
-        Task<PagedResultDto<Category>> GetUsersWithPaginationAsync(PaginationQueryDto paginationQuery);
+        Task<PagedResultDto<Category>> GetCategoryWithPaginationAsync(PaginationQueryDto paginationQuery);
 
         Task<Category> GetCategoryByIdAsync(int id);
     }

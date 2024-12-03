@@ -38,7 +38,7 @@ namespace DarazApp.Services.CategoryService
 
         public async Task<Category> AddCategoryAsync(Category category)
         {
-           await _categoryRepository.AddCategoryAsync(category);
+           await _categoryRepository.AddAsync(category);
             return category;
         }
 
@@ -49,13 +49,13 @@ namespace DarazApp.Services.CategoryService
 
         public async Task<Category> GetCategoryByIdAsync(int id)
         {
-            return await _categoryRepository.GetCategoryByIdAsync(id);
+            return await _categoryRepository.GetByIdAsync(id);
         }
 
 
-        public async Task<PagedResultDto<Category>> GetUsersWithPaginationAsync(PaginationQueryDto paginationQuery)
+        public async Task<PagedResultDto<Category>> GetCategoryWithPaginationAsync(PaginationQueryDto paginationQuery)
         {
-            return await _categoryRepository.GetUsersWithPaginationAsync(paginationQuery);
+            return await _categoryRepository.GetWithPaginationAsync(paginationQuery);
 
         }
 

@@ -56,19 +56,19 @@ namespace DarazApp.Controllers
             try
             {
                 // Fetch products for the category
-                List<Product> products = await _productService.GetProductsById(id);
+                Product product = await _productService.GetProductsById(id);
 
                 // Check if products were found
-                if (products == null || products.Count == 0)
+                if (product == null)
                 {
                     return NotFound<string>(ProductResponseMessages.NoProductsFound);  // Use constant for "No products found" message
                 }
 
                 // Map the list of products to ProductDto
-                List<ProductDto> productDtos = _mapper.Map<List<ProductDto>>(products);
+                ProductDto productDto = _mapper.Map<ProductDto>(product);
 
                 // Return success response with the product list
-                return Ok(productDtos, ProductResponseMessages.ProductsRetrievedSuccess);  // Use constant for success message
+                return Ok(productDto, ProductResponseMessages.ProductsRetrievedSuccess);  // Use constant for success message
             }
             catch (Exception ex)
             {
@@ -99,11 +99,11 @@ namespace DarazApp.Controllers
         }
 
         [HttpGet("GetOnPagination")]
-        public async Task<ActionResult> GetUsers([FromQuery] PaginationQueryDto paginationQuery)
+        public async Task<ActionResult> GetProducts([FromQuery] PaginationQueryDto paginationQuery)
         {
             try
             {
-                PagedResultDto<Product> pagedResult = await _productService.GetUsersWithPaginationAsync(paginationQuery);
+                PagedResultDto<Product> pagedResult = await _productService.GetProductsWithPaginationAsync(paginationQuery);
 
                 if (pagedResult == null || !pagedResult.Items.Any())
                 {

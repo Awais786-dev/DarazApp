@@ -1,6 +1,7 @@
 using DarazApp.DbContext;
 using DarazApp.Mapping;
 using DarazApp.Models;
+using DarazApp.Repositories;
 using DarazApp.Repositories.CategoryRepository;
 using DarazApp.Repositories.OrderRepository;
 using DarazApp.Repositories.ProductRepository;
@@ -29,7 +30,9 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IUserRepository, UserRepository>(); // Shared instance for user data
 builder.Services.AddScoped<IUserService, UserService>(); // Register the service // New instance for each request
 builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<ITokenService, TokenService>(); 
+builder.Services.AddScoped<ITokenService, TokenService>();
+
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
@@ -43,13 +46,13 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile)); // Registers your profile
 
-builder.Services.AddDbContext<UserDbContext>(options =>
+builder.Services.AddDbContext<DarazApp.DbContext.DbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
 // Add Identity services
 builder.Services.AddIdentity<User, IdentityRole>()  // Use your custom User class
-    .AddEntityFrameworkStores<UserDbContext>()
+    .AddEntityFrameworkStores<DarazApp.DbContext.DbContext>()
     .AddDefaultTokenProviders(); // Optional, adds token providers (e.g., for email confirmation, password reset, etc.)
 
 

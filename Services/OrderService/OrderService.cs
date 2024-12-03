@@ -25,9 +25,7 @@ namespace DarazApp.Services.OrderService
             }
 
             // Retrieve product and validate stock
-            List<Product> products = await _productRepository.GetProductsByIdAsync(orderDto.ProductId);
-
-            Product product = products.FirstOrDefault(p => p.Id == orderDto.ProductId); 
+            Product product = await _productRepository.GetByIdAsync(orderDto.ProductId);
 
             if (product == null || product.StockQuantity < orderDto.NumOfItems || product.StockQuantity==0)
             {
@@ -36,7 +34,7 @@ namespace DarazApp.Services.OrderService
 
             // Decrease stock quantity
             product.StockQuantity -= orderDto.NumOfItems;
-            await _productRepository.UpdateProductAsync(product);
+            await _productRepository.UpdateAsync(product);
 
             // Map DTO to Order
             Order order = new Order
@@ -47,7 +45,7 @@ namespace DarazApp.Services.OrderService
                 OrderStatus = "Pending", // Default status for new orders
                 PaymentMethod = orderDto.PaymentMethod,
                 TotalAmount = product.Price * orderDto.NumOfItems, // Calculate total amount based on NumOfItems and Product price
-                OrderDate = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
                 IsActive = true,
                 ModifiedAt = DateTime.UtcNow,
                 Address=orderDto.Address
@@ -78,9 +76,9 @@ namespace DarazApp.Services.OrderService
         }
 
 
-        public async Task<PagedResultDto<Order>> GetUsersWithPaginationAsync(PaginationQueryDto paginationQuery)
+        public async Task<PagedResultDto<Order>> GetOrdersWithPaginationAsync(PaginationQueryDto paginationQuery)
         {
-            return await _orderRepository.GetUsersWithPaginationAsync(paginationQuery);
+            return await _orderRepository.GetWithPaginationAsync(paginationQuery);
         }
 
     }

@@ -94,11 +94,11 @@ namespace DarazApp.Controllers
         }
 
         [HttpGet("GetOnPagination")]
-        public async Task<ActionResult> GetUsers([FromQuery] PaginationQueryDto paginationQuery)
+        public async Task<ActionResult> GetOrders([FromQuery] PaginationQueryDto paginationQuery)
         {
             try
             {
-                PagedResultDto<Order> pagedResult = await _orderService.GetUsersWithPaginationAsync(paginationQuery);
+                PagedResultDto<Order> pagedResult = await _orderService.GetOrdersWithPaginationAsync(paginationQuery);
 
                 if (pagedResult == null || !pagedResult.Items.Any())
                 {

@@ -11,7 +11,7 @@ namespace DarazApp.Services.OrderService
 
         Task<List<Order>> GetOrdersByUserAsync(string userId);
 
-        Task<PagedResultDto<Order>> GetUsersWithPaginationAsync(PaginationQueryDto paginationQuery);
+        Task<PagedResultDto<Order>> GetOrdersWithPaginationAsync(PaginationQueryDto paginationQuery);
 
 
     }

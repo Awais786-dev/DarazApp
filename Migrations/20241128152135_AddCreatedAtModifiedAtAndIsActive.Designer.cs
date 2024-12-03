@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DarazApp.Migrations
 {
-    [DbContext(typeof(UserDbContext))]
+    [DbContext(typeof(DbContext.DbContext))]
     [Migration("20241128152135_AddCreatedAtModifiedAtAndIsActive")]
     partial class AddCreatedAtModifiedAtAndIsActive
     {

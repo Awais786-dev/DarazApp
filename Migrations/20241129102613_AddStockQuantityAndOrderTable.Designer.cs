@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DarazApp.Migrations
 {
-    [DbContext(typeof(UserDbContext))]
+    [DbContext(typeof(DbContext.DbContext))]
     [Migration("20241129102613_AddStockQuantityAndOrderTable")]
     partial class AddStockQuantityAndOrderTable
     {

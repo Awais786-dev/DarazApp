@@ -48,20 +48,22 @@ namespace DarazApp.Mapping
             // Mapping Order to OrderDto
 
             CreateMap<Order, OrderDto>()
-          .ForMember(dest => dest.OrderId, opt => opt.MapFrom(src => src.OrderId))
+          .ForMember(dest => dest.OrderId, opt => opt.MapFrom(src => src.Id))
           .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
           .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
           .ForMember(dest => dest.NumOfItems, opt => opt.MapFrom(src => src.NumOfItems))
           .ForMember(dest => dest.OrderStatus, opt => opt.MapFrom(src => src.OrderStatus))
           .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.PaymentMethod))
           .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount)); // Map calculated TotalAmount
+         
 
             // Mapping OrderDto to Order (without TotalAmount as it's calculated in service)
             CreateMap<OrderDto, Order>()
             .ForMember(dest => dest.TotalAmount, opt => opt.Ignore()) // Ignore TotalAmount
             .ForMember(dest => dest.OrderStatus, opt => opt.Ignore())  // Ignore OrderStatus
             .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true)) // Default to active
-            .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => DateTime.UtcNow)); // Set ModifiedAt to current time
+            .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => DateTime.UtcNow)) // Set ModifiedAt to current time
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.OrderId));
 
         }
     }

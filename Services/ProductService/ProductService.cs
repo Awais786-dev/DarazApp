@@ -19,14 +19,14 @@ namespace DarazApp.Services.ProductService
         public async Task<Product> AddProductAsync(Product product)
         {
 
-            Product addedproduct = await _productRepository.AddProductAsync(product);
+            Product addedproduct = await _productRepository.AddAsync(product);
             return addedproduct;
         }
 
 
-        public async Task<List<Product>> GetProductsById(int productId)
+        public async Task<Product> GetProductsById(int productId)
         {
-            return await _productRepository.GetProductsByIdAsync(productId);
+            return await _productRepository.GetByIdAsync(productId);
         }
 
 
@@ -48,9 +48,9 @@ namespace DarazApp.Services.ProductService
         }
 
 
-        public async Task<PagedResultDto<Product>> GetUsersWithPaginationAsync(PaginationQueryDto paginationQuery)
+        public async Task<PagedResultDto<Product>> GetProductsWithPaginationAsync(PaginationQueryDto paginationQuery)
         {
-            return await _productRepository.GetUsersWithPaginationAsync(paginationQuery);
+            return await _productRepository.GetWithPaginationAsync(paginationQuery);
         }
     }
 }

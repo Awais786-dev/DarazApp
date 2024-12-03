@@ -7,13 +7,13 @@ namespace DarazApp.Repositories.UserRepository
 {
     public class UserRepository : IUserRepository
     {
-        private readonly UserDbContext _context;
+        private readonly DbContext.DbContext _context;
         private readonly UserManager<User> _userManager;
        // private List<User> users;
 
 
 
-        public UserRepository(UserDbContext context, UserManager<User> userManager)
+        public UserRepository(DbContext.DbContext context, UserManager<User> userManager)
         {
             _context = context;
             _userManager = userManager;

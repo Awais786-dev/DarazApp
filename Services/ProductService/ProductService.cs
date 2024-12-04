@@ -1,6 +1,6 @@
 ﻿using DarazApp.DTOs;
 using DarazApp.Models;
-using DarazApp.Repositories.ProductRepository;
+using DarazApp.Repositories;
 using DarazApp.Responses;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Metadata.Ecma335;
@@ -9,9 +9,9 @@ namespace DarazApp.Services.ProductService
 {
     public class ProductService : IProductService
     {
-        private readonly IProductRepository _productRepository;
+        private readonly IGenericRepository<Product> _productRepository;
 
-        public ProductService(IProductRepository productRepository)
+        public ProductService(IGenericRepository<Product> productRepository)
         {
             _productRepository = productRepository;
         }
@@ -37,7 +37,7 @@ namespace DarazApp.Services.ProductService
                 throw new Exception("Name of product can not empty.");
             }
 
-            var products = await _productRepository.SearchProductsByNameAsync(productName);
+            List<Product> products = await _productRepository.FindByConditionAsync<Product>(p => p.Name.Contains(productName)).ToListAsync();
 
             if (products == null || !products.Any())
             {

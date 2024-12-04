@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DarazApp.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
+  //  [ApiController]
     public class ProductsController : BaseController
     {
         private readonly IProductService _productService;

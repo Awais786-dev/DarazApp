@@ -65,6 +65,15 @@ namespace DarazApp.Mapping
             .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => DateTime.UtcNow)) // Set ModifiedAt to current time
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.OrderId));
 
+            // Mapping from Order to OrderOutputDto
+            CreateMap<Order, OrderOutputDto>()
+                .ForMember(dest => dest.OrderId, opt => opt.MapFrom(src => src.Id))  // Assuming 'Id' is the primary key in Order
+                .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
+                .ForMember(dest => dest.NumOfItems, opt => opt.MapFrom(src => src.NumOfItems))
+                .ForMember(dest => dest.OrderStatus, opt => opt.MapFrom(src => src.OrderStatus))
+                .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.PaymentMethod))
+                .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address));
         }
     }
 }

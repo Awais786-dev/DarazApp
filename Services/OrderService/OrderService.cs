@@ -1,22 +1,22 @@
 ﻿using DarazApp.DTOs;
 using DarazApp.Models;
-using DarazApp.Repositories.OrderRepository;
-using DarazApp.Repositories.ProductRepository;
+using DarazApp.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace DarazApp.Services.OrderService
 {
     public class OrderService : IOrderService
     {
-        private readonly IOrderRepository _orderRepository;
-        private readonly IProductRepository _productRepository;
+        private readonly IGenericRepository<Order> _orderRepository;
+        private readonly IGenericRepository<Product> _productRepository;
 
-        public OrderService(IOrderRepository orderRepository, IProductRepository productRepository)
+        public OrderService(IGenericRepository<Order> orderRepository, IGenericRepository<Product> productRepository)
         {
             _orderRepository = orderRepository;
             _productRepository = productRepository;
         }
 
-        public async Task<Order> CreateOrderAsync(OrderDto orderDto)
+        public async Task<Order> CreateOrderAsync(OrderInputDto orderDto)
         {
             // Validate input
             if (orderDto.NumOfItems <= 0)
@@ -27,9 +27,14 @@ namespace DarazApp.Services.OrderService
             // Retrieve product and validate stock
             Product product = await _productRepository.GetByIdAsync(orderDto.ProductId);
 
-            if (product == null || product.StockQuantity < orderDto.NumOfItems || product.StockQuantity==0)
+            if (product == null)
+            {
+                throw new Exception("Product Id does not exist.");
+            }
+            if (product.StockQuantity < orderDto.NumOfItems || product.StockQuantity == 0)
             {
                 throw new Exception("Not enough stock for the product.");
+
             }
 
             // Decrease stock quantity
@@ -48,7 +53,7 @@ namespace DarazApp.Services.OrderService
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true,
                 ModifiedAt = DateTime.UtcNow,
-                Address=orderDto.Address
+                Address = orderDto.Address
             };
 
             // Save order
@@ -71,7 +76,8 @@ namespace DarazApp.Services.OrderService
 
         public async Task<List<Order>> GetOrdersByUserAsync(string userId)
         {
-            var orders = await _orderRepository.GetByUserIdAsync(userId);
+            var orders = await _orderRepository.FindByConditionAsync<Order>(o => o.UserId == userId).ToListAsync();
+
             return orders;
         }
 

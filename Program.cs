@@ -2,9 +2,6 @@ using DarazApp.DbContext;
 using DarazApp.Mapping;
 using DarazApp.Models;
 using DarazApp.Repositories;
-using DarazApp.Repositories.CategoryRepository;
-using DarazApp.Repositories.OrderRepository;
-using DarazApp.Repositories.ProductRepository;
 using DarazApp.Repositories.UserRepositories;
 using DarazApp.Repositories.UserRepository;
 using DarazApp.Services.CategoryService;
@@ -33,10 +30,6 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();

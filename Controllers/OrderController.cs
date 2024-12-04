@@ -10,6 +10,7 @@ namespace DarazApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class OrderController : BaseController
     {
         private readonly IOrderService _orderService;
@@ -23,8 +24,7 @@ namespace DarazApp.Controllers
 
         // Create Order (POST)
         [HttpPost]
-        [Authorize]
-        public async Task<IActionResult> CreateOrder([FromBody] OrderDto orderDto)
+        public async Task<IActionResult> CreateOrder([FromBody] OrderInputDto orderDto)
         {
             try
             {

@@ -5,7 +5,7 @@ namespace DarazApp.Services.OrderService
 {
     public interface IOrderService
     {
-        Task<Order> CreateOrderAsync(OrderDto orderDto);
+        Task<Order> CreateOrderAsync(OrderInputDto orderDto);
 
         Task<Order> GetOrderByIdAsync(int orderId);
 

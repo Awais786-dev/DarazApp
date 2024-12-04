@@ -106,7 +106,7 @@ namespace DarazApp.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest<string>($"{CategoryResponseMessages.ErrorOccurred} {ex.Message}");  
+                return BadRequest<string>(CategoryResponseMessages.ErrorOccurred, new List<string> { ex.Message });
             }
         }
 

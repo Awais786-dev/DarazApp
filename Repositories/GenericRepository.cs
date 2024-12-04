@@ -8,10 +8,10 @@ using System.Linq.Expressions;
 
 public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
-    private readonly DbContext _context;
+    private readonly DarazApp.DbContext.DbContext _context;
     private readonly DbSet<T> _dbSet;
 
-    public GenericRepository(DbContext context)
+    public GenericRepository(DarazApp.DbContext.DbContext context)
     {
         _context = context;
         _dbSet = _context.Set<T>();
@@ -51,32 +51,19 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         }
     }
 
-    public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+    //public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+    //{
+    //    return await _dbSet.Where(predicate).ToListAsync();
+    //}
+
+    // new added
+    //public async Task<List<TEntity>> FindByConditionAsync<TEntity>(Expression<Func<TEntity, bool>> predicate) where TEntity : class
+    //{
+    //    return await _context.Set<TEntity>().Where(predicate).ToListAsync();
+    //}
+    public IQueryable<TEntity> FindByConditionAsync<TEntity>(Expression<Func<TEntity, bool>> predicate) where TEntity : class
     {
-        return await _dbSet.Where(predicate).ToListAsync();
-    }
-
-    public IQueryable<T> FindByConditionsAsync(string conditions)
-    {
-        if (string.IsNullOrEmpty(conditions)) return _dbSet.AsQueryable();
-
-        // Normalize the conditions by making everything uppercase for consistency
-        conditions = conditions.Replace("and", "AND").Replace("or", "OR");
-
-        // Build the Where clause dynamically for each condition
-        var query = _dbSet.AsQueryable();
-
-        try
-        {
-            // query = query.Where(conditions);
-            return _dbSet.Where(conditions); // Return the IQueryable with applied conditions
-
-        }
-        catch (Exception ex)
-        {
-
-            throw new ArgumentException("Error building dynamic query: " + ex.Message);
-        }
+        return _context.Set<TEntity>().Where(predicate);
     }
 
 
@@ -93,8 +80,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         // Search (if applicable to the entity)
         if (!string.IsNullOrEmpty(searchConditions))
         {
-            // Customize this part for specific entity fields.
-            query = FindByConditionsAsync(searchConditions);
+            query = query.Where(searchConditions);
         }
 
         // Sorting

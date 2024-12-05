@@ -49,13 +49,12 @@ namespace DarazApp.Mapping
 
             CreateMap<Order, OrderDto>()
           .ForMember(dest => dest.OrderId, opt => opt.MapFrom(src => src.Id))
-          .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
           .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
-          .ForMember(dest => dest.NumOfItems, opt => opt.MapFrom(src => src.NumOfItems))
           .ForMember(dest => dest.OrderStatus, opt => opt.MapFrom(src => src.OrderStatus))
           .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.PaymentMethod))
+          .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.OrderItems))
           .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount)); // Map calculated TotalAmount
-         
+
 
             // Mapping OrderDto to Order (without TotalAmount as it's calculated in service)
             CreateMap<OrderDto, Order>()
@@ -65,15 +64,23 @@ namespace DarazApp.Mapping
             .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => DateTime.UtcNow)) // Set ModifiedAt to current time
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.OrderId));
 
-            // Mapping from Order to OrderOutputDto
-            CreateMap<Order, OrderOutputDto>()
-                .ForMember(dest => dest.OrderId, opt => opt.MapFrom(src => src.Id))  // Assuming 'Id' is the primary key in Order
-                .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
-                .ForMember(dest => dest.NumOfItems, opt => opt.MapFrom(src => src.NumOfItems))
-                .ForMember(dest => dest.OrderStatus, opt => opt.MapFrom(src => src.OrderStatus))
-                .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.PaymentMethod))
-                .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
-                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address));
+
+            CreateMap<OrderItem, OrderItemDto>()
+            .ForMember(dest => dest.OrderItemId, opt => opt.MapFrom(src => src.Id)) // Map primary key
+            .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
+            .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name)) // Assuming Product is included
+            .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
+            .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.Price / src.Quantity)) // Unit price
+            .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.Price)); // Total price
+
+
+            CreateMap<OrderItemDto, OrderItem>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore()) // Ignore the ID, as it's auto-generated
+            .ForMember(dest => dest.OrderId, opt => opt.Ignore()) // Will be set in service logic
+            .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
+            .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
+            .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.UnitPrice)); // Map back unit price
+
         }
     }
 }

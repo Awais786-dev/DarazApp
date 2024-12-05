@@ -2,6 +2,7 @@
 using DarazApp.Models;
 using DarazApp.Repositories;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace DarazApp.Services.OrderService
 {
@@ -9,62 +10,86 @@ namespace DarazApp.Services.OrderService
     {
         private readonly IGenericRepository<Order> _orderRepository;
         private readonly IGenericRepository<Product> _productRepository;
+        private readonly IGenericRepository<OrderItem> _orderItemRepository;
 
-        public OrderService(IGenericRepository<Order> orderRepository, IGenericRepository<Product> productRepository)
+
+        public OrderService(IGenericRepository<Order> orderRepository, IGenericRepository<Product> productRepository, IGenericRepository<OrderItem> orderItemRepository)
         {
             _orderRepository = orderRepository;
             _productRepository = productRepository;
+            _orderItemRepository = orderItemRepository;
         }
 
         public async Task<Order> CreateOrderAsync(OrderInputDto orderDto)
         {
-            // Validate input
-            if (orderDto.NumOfItems <= 0)
+            decimal totalAmount = 0;
+
+            // Validate input and retrieve products
+            foreach (var item in orderDto.Items)
             {
-                throw new Exception("Number of items must be greater than 0.");
+                Product product = await _productRepository.GetByIdAsync(item.ProductId);
+                if (product == null || product.StockQuantity < item.NumOfItems)
+                {
+                    throw new Exception($"Product {item.ProductId} has insufficient stock.");
+                }
+
+                // Reduce stock
+                product.StockQuantity -= item.NumOfItems;
+                await _productRepository.UpdateAsync(product);
+
+                // Accumulate the total amount
+                totalAmount += product.Price * item.NumOfItems;
             }
 
-            // Retrieve product and validate stock
-            Product product = await _productRepository.GetByIdAsync(orderDto.ProductId);
-
-            if (product == null)
+            // Create Order
+            Order order = new()
             {
-                throw new Exception("Product Id does not exist.");
-            }
-            if (product.StockQuantity < orderDto.NumOfItems || product.StockQuantity == 0)
-            {
-                throw new Exception("Not enough stock for the product.");
-
-            }
-
-            // Decrease stock quantity
-            product.StockQuantity -= orderDto.NumOfItems;
-            await _productRepository.UpdateAsync(product);
-
-            // Map DTO to Order
-            Order order = new Order
-            {
-                ProductId = orderDto.ProductId,
                 UserId = orderDto.UserId,
-                NumOfItems = orderDto.NumOfItems,
-                OrderStatus = "Pending", // Default status for new orders
+                OrderStatus = "Pending",
                 PaymentMethod = orderDto.PaymentMethod,
-                TotalAmount = product.Price * orderDto.NumOfItems, // Calculate total amount based on NumOfItems and Product price
+                TotalAmount = totalAmount, // Set total amount calculated in the loop
+
+                // Address Details
+                Province = orderDto.Province,
+                PhoneNumber = orderDto.PhoneNumber,
+                City = orderDto.City,
+                StreetDetails = orderDto.StreetDetails,
+                Address = orderDto.Address,
+
                 CreatedAt = DateTime.UtcNow,
-                IsActive = true,
                 ModifiedAt = DateTime.UtcNow,
-                Address = orderDto.Address
+                IsActive = true,
             };
 
-            // Save order
             Order createdOrder = await _orderRepository.AddAsync(order);
+
+            // Create Order Items
+            foreach (var item in orderDto.Items)
+            {
+                OrderItem orderItem = new()
+                {
+                    OrderId = createdOrder.Id,
+                    ProductId = item.ProductId,
+                    Quantity = item.NumOfItems,
+                    Price = (await _productRepository.GetByIdAsync(item.ProductId)).Price * item.NumOfItems,
+                };
+
+                await _orderItemRepository.AddAsync(orderItem);
+            }
 
             return createdOrder;
         }
 
+
         public async Task<Order> GetOrderByIdAsync(int orderId)
         {
-            var order = await _orderRepository.GetByIdAsync(orderId);
+            var order = await _orderRepository.GetByIdWithIncludesAsync(
+                orderId,
+                query => query
+                    .Include(o => o.OrderItems)              // Include OrderItems
+                    .ThenInclude(oi => oi.Product)           // Include Product for each OrderItem
+            );
+
             if (order == null)
             {
                 throw new Exception("Order not found.");
@@ -76,7 +101,14 @@ namespace DarazApp.Services.OrderService
 
         public async Task<List<Order>> GetOrdersByUserAsync(string userId)
         {
-            var orders = await _orderRepository.FindByConditionAsync<Order>(o => o.UserId == userId).ToListAsync();
+            Expression<Func<Order, bool>> predicate = (o => o.UserId == userId);
+
+            List<Order> orders = await _orderRepository.FindWithIncludesAsync(
+               predicate, // Filter by userId
+                query => query
+                    .Include(o => o.OrderItems)              // Include OrderItems
+                    .ThenInclude(oi => oi.Product)           // Include Product for each OrderItem
+            );
 
             return orders;
         }
@@ -84,7 +116,13 @@ namespace DarazApp.Services.OrderService
 
         public async Task<PagedResultDto<Order>> GetOrdersWithPaginationAsync(PaginationQueryDto paginationQuery)
         {
-            return await _orderRepository.GetWithPaginationAsync(paginationQuery);
+            // return await _orderRepository.GetWithPaginationAsync(paginationQuery);
+            return await _orderRepository.GetWithPaginationAsync(
+           paginationQuery,
+           includeChain: query =>
+               query.Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+       );
         }
 
     }

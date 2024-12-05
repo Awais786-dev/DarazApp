@@ -22,6 +22,22 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return await _dbSet.FindAsync(id);
     }
 
+    public async Task<T> GetByIdWithIncludesAsync(int id, Func<IQueryable<T>, IQueryable<T>> includeChain)
+    {
+        var query = includeChain(_dbSet.AsQueryable());
+        return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
+    }
+
+
+
+    public async Task<List<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, Func<IQueryable<T>, IQueryable<T>> includeChain)
+    {
+        var query = includeChain(_dbSet.AsQueryable());
+        return await query.Where(predicate).ToListAsync();
+    }
+
+
+
     public async Task<IEnumerable<T>> GetAllAsync()
     {
         return await _dbSet.ToListAsync();
@@ -51,23 +67,13 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         }
     }
 
-    //public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
-    //{
-    //    return await _dbSet.Where(predicate).ToListAsync();
-    //}
-
-    // new added
-    //public async Task<List<TEntity>> FindByConditionAsync<TEntity>(Expression<Func<TEntity, bool>> predicate) where TEntity : class
-    //{
-    //    return await _context.Set<TEntity>().Where(predicate).ToListAsync();
-    //}
     public IQueryable<TEntity> FindByConditionAsync<TEntity>(Expression<Func<TEntity, bool>> predicate) where TEntity : class
     {
         return _context.Set<TEntity>().Where(predicate);
     }
 
 
-    public async Task<PagedResultDto<T>> GetWithPaginationAsync(PaginationQueryDto paginationQuery)
+    public async Task<PagedResultDto<T>> GetWithPaginationAsync(PaginationQueryDto paginationQuery, Func<IQueryable<T>, IQueryable<T>> includeChain = null)
     {
         string searchConditions = paginationQuery.SearchKeyword;
         int pageNumber = paginationQuery.PageNumber;
@@ -76,6 +82,12 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         bool ascending = paginationQuery.Ascending;
 
         IQueryable<T> query = _dbSet.AsQueryable();
+
+        // Include navigation properties if provided
+        if (includeChain != null)
+        {
+            query = includeChain(query);
+        }
 
         // Search (if applicable to the entity)
         if (!string.IsNullOrEmpty(searchConditions))
@@ -110,4 +122,5 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             PageSize = pageSize
         };
     }
+
 }

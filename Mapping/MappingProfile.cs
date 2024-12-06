@@ -81,6 +81,27 @@ namespace DarazApp.Mapping
             .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
             .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.UnitPrice)); // Map back unit price
 
+
+            // Map from CartInputDto to Cart (for Create or Update)
+            CreateMap<CartInputDto, Cart>()
+                .ForMember(dest => dest.CartItems, opt => opt.Ignore()); // CartItems are handled separately
+
+            // Map from CartItemInputDto to CartItem
+            CreateMap<CartItemInputDto, CartItem>();
+
+            // Map from Cart to CartDto (for viewing cart details)
+            CreateMap<Cart, CartDto>()
+                .ForMember(dest => dest.CartItems, opt => opt.MapFrom(src => src.CartItems));
+
+            // Map from CartItem to CartItemDto
+            CreateMap<CartItem, CartItemDto>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.ProductName));
+
+            // Map from CartItemDto to CartItem
+            CreateMap<CartItemDto, CartItem>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.ProductName));
+
+
         }
     }
 }

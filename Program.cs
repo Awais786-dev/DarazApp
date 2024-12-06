@@ -4,6 +4,7 @@ using DarazApp.Models;
 using DarazApp.Repositories;
 using DarazApp.Repositories.UserRepositories;
 using DarazApp.Repositories.UserRepository;
+using DarazApp.Services.CartService;
 using DarazApp.Services.CategoryService;
 using DarazApp.Services.EmailService;
 using DarazApp.Services.OrderService;
@@ -34,6 +35,8 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ICartService, CartService>();
+
 
 
 
